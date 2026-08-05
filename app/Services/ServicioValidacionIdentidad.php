@@ -54,12 +54,12 @@ class ServicioValidacionIdentidad
             if ($respuesta->successful()) {
                 $html = $respuesta->body();
                 
-                if (preg_match('/<div[^>]*class="[^"]*card-header[^"]*"[^>]*>\s*<h3[^>]*>(.*?)<\/h3>/s', $html, $matches)) {
+                if (preg_match('/<h1[^>]*class="[^"]*cp-name[^"]*"[^>]*>(.*?)<\/h1>/si', $html, $matches)) {
                     $nombreCompleto = trim(strip_tags(html_entity_decode($matches[1])));
                     
                     if (!empty($nombreCompleto) && $nombreCompleto !== 'Iniciar sesión' && $nombreCompleto !== 'Acceso Denegado') {
-                        preg_match('/Carrera<\/td>\s*<td[^>]*>\s*(.*?)\s*<\/td>/si', $html, $mProf);
-                        preg_match('/Universidad<\/td>\s*<td[^>]*>\s*(.*?)\s*<\/td>/si', $html, $mInst);
+                        preg_match('/<span[^>]*class="[^"]*cp-row-label[^"]*"[^>]*>Carrera<\/span>\s*<span[^>]*class="[^"]*cp-row-value[^"]*"[^>]*>(.*?)<\/span>/si', $html, $mProf);
+                        preg_match('/<span[^>]*class="[^"]*cp-row-label[^"]*"[^>]*>Universidad<\/span>\s*<span[^>]*class="[^"]*cp-row-value[^"]*"[^>]*>(.*?)<\/span>/si', $html, $mInst);
                         
                         // Lógica básica para dividir nombre: [Nombres] [Paterno] [Materno]
                         $partes = explode(' ', $nombreCompleto);
