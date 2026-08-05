@@ -29,9 +29,9 @@ class ControladorAutenticacion extends Controller
                 'string',
                 'min:8',
                 'confirmed',
-                'regex:/[A-Z]/', 
-                'regex:/[0-9]/', 
-                'regex:/[!@#$%^&*(),.?":{}|<>]/', 
+                'regex:/[A-Z]/',
+                'regex:/[0-9]/',
+                'regex:/[!@#$%^&*(),.?":{}|<>]/',
             ],
             'rol' => 'required|in:paciente,nutriologo',
         ];
@@ -172,13 +172,21 @@ class ControladorAutenticacion extends Controller
             ], 500);
         }
 
+        if ($resultadoIdentidad['estado'] === 'error_lectura') {
+            return response()->json([
+                'valido' => false,
+                'mensaje' => $resultadoIdentidad['mensaje'],
+                'debug_lectura' => ''
+            ], 422);
+        }
+
         $textoLeido = $resultadoIdentidad['texto_ocr'] ?? '';
-        
+
         $nombreCompleto = mb_strtoupper("{$request->nombres} {$request->apellido_p} {$request->apellido_m}");
         $nombreCompleto = str_replace(['Á', 'É', 'Í', 'Ó', 'Ú'], ['A', 'E', 'I', 'O', 'U'], $nombreCompleto);
-        
+
         $partesNombre = array_filter(explode(' ', $nombreCompleto), function($p) {
-            return strlen($p) > 2; 
+            return strlen($p) > 2;
         });
 
         $faltantes = [];

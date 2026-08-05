@@ -22,7 +22,7 @@ class ServicioValidacionIdentidad
             $respuesta = \Illuminate\Support\Facades\Http::timeout(5)
                 ->withoutVerifying()
                 ->get($urlSep);
-            
+
             if ($respuesta->successful() && isset($respuesta->json()['response']['docs'][0])) {
                 $doc = $respuesta->json()['response']['docs'][0];
                 return [
@@ -53,18 +53,18 @@ class ServicioValidacionIdentidad
 
             if ($respuesta->successful()) {
                 $html = $respuesta->body();
-                
+
                 if (preg_match('/<h1[^>]*class="[^"]*cp-name[^"]*"[^>]*>(.*?)<\/h1>/si', $html, $matches)) {
                     $nombreCompleto = trim(strip_tags(html_entity_decode($matches[1])));
-                    
+
                     if (!empty($nombreCompleto) && $nombreCompleto !== 'Iniciar sesión' && $nombreCompleto !== 'Acceso Denegado') {
                         preg_match('/<span[^>]*class="[^"]*cp-row-label[^"]*"[^>]*>Carrera<\/span>\s*<span[^>]*class="[^"]*cp-row-value[^"]*"[^>]*>(.*?)<\/span>/si', $html, $mProf);
                         preg_match('/<span[^>]*class="[^"]*cp-row-label[^"]*"[^>]*>Universidad<\/span>\s*<span[^>]*class="[^"]*cp-row-value[^"]*"[^>]*>(.*?)<\/span>/si', $html, $mInst);
-                        
+
                         // Lógica básica para dividir nombre: [Nombres] [Paterno] [Materno]
                         $partes = explode(' ', $nombreCompleto);
                         $count = count($partes);
-                        
+
                         $materno = ($count >= 3) ? array_pop($partes) : '';
                         $paterno = ($count >= 2) ? array_pop($partes) : '';
                         $nombres = implode(' ', $partes);
@@ -89,7 +89,7 @@ class ServicioValidacionIdentidad
     public function validarIdentidad(string $frentePath, string $reversoPath): array
     {
         $rutaAbsoluta = storage_path('app/' . $frentePath);
-        
+
         if (!file_exists($rutaAbsoluta)) {
             return [
                 'estado' => 'error_archivo',
@@ -109,17 +109,21 @@ class ServicioValidacionIdentidad
 
         // Intento 1: PSM 3 (Modo automático)
         $texto1 = shell_exec("tesseract \"{$rutaAbsoluta}\" stdout -l spa --psm 3 2>&1");
-        
+
         // Intento 2: PSM 6 (Asume un bloque de texto uniforme)
         $texto2 = shell_exec("tesseract \"{$rutaAbsoluta}\" stdout -l spa --psm 6 2>&1");
-        
-        $textoFinal = strtoupper($texto1 . "\n" . $texto2);
 
-        if (empty($textoFinal)) {
+        // Intento 3: PSM 11 (Texto disperso, bueno para documentos)
+        $texto3 = shell_exec("tesseract \"{$rutaAbsoluta}\" stdout -l spa --psm 11 2>&1");
+
+        $textoFinal = strtoupper($texto1 . "\n" . $texto2 . "\n" . $texto3);
+
+        if (empty(trim($textoFinal)) || strlen(trim($textoFinal)) < 10) {
             return [
                 'estado' => 'error_lectura',
-                'mensaje' => 'Tesseract no pudo leer nada de la imagen.',
-                'nombres' => '', 'paterno' => '', 'materno' => ''
+                'mensaje' => 'No se pudo extraer texto legible de la imagen. Intenta con una foto más clara y sin reflejos.',
+                'nombres' => '', 'paterno' => '', 'materno' => '',
+                'texto_ocr' => ''
             ];
         }
 
