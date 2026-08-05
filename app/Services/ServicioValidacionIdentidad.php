@@ -128,8 +128,8 @@ class ServicioValidacionIdentidad
         }
 
         // Normalización
-        $buscar = ['Á', 'É', 'Í', 'Ó', 'Ú', '0', '1', '|'];
-        $reemplazar = ['A', 'E', 'I', 'O', 'U', 'O', 'I', 'I'];
+        $buscar = ['Á', 'É', 'Í', 'Ó', 'Ú', 'Ñ', '0', '1', '|'];
+        $reemplazar = ['A', 'E', 'I', 'O', 'U', 'N', 'O', 'I', 'I'];
         $textoLimpio = str_replace($buscar, $reemplazar, $textoFinal);
 
         return [

@@ -183,7 +183,7 @@ class ControladorAutenticacion extends Controller
         $textoLeido = $resultadoIdentidad['texto_ocr'] ?? '';
 
         $nombreCompleto = mb_strtoupper("{$request->nombres} {$request->apellido_p} {$request->apellido_m}");
-        $nombreCompleto = str_replace(['Á', 'É', 'Í', 'Ó', 'Ú'], ['A', 'E', 'I', 'O', 'U'], $nombreCompleto);
+        $nombreCompleto = str_replace(['Á', 'É', 'Í', 'Ó', 'Ú', 'Ñ'], ['A', 'E', 'I', 'O', 'U', 'N'], $nombreCompleto);
 
         $partesNombre = array_filter(explode(' ', $nombreCompleto), function($p) {
             return strlen($p) > 2;
