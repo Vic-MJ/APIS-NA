@@ -10,18 +10,26 @@ class ControladorNutriologo extends Controller
 {
     public function index()
     {
-        // Obtenemos todos los usuarios que son nutriólogos
-        // Usamos where('rol', 'nutriologo') para asegurar coincidencia exacta
-        $usuariosNutriologos = Usuario::where('rol', 'nutriologo')->get();
+        // Obtenemos todos los usuarios que tienen rol de nutriologo (insensible a mayúsculas)
+        $usuariosNutriologos = Usuario::where('rol', 'regexp', '/nutriologo/i')->get();
 
         // Los mapeamos al formato de respuesta esperado para profesionales
         $respuesta = $usuariosNutriologos->map(function($u) {
+            // Aseguramos que el nombre nunca sea nulo para que la App no ignore el registro
+            $nombreAMostrar = $u->nombre_completo;
+            if (empty($nombreAMostrar) || $nombreAMostrar === $u->correo) {
+                 // Si no tiene nombre estructurado, intentamos armarlo manualmente del campo nombre si es array
+                 if (is_array($u->nombre)) {
+                     $nombreAMostrar = trim(($u->nombre['nombres'] ?? '') . ' ' . ($u->nombre['apellido_p'] ?? ''));
+                 }
+            }
+
             return [
                 'id' => (string)$u->_id,
-                'nombre' => $u->nombre_completo,
+                'nombre' => !empty($nombreAMostrar) ? $nombreAMostrar : $u->correo,
                 'especialidad' => $u->tipo_cedula ?? 'Nutriólogo General',
                 'cedula' => $u->cedula ?? 'Sin cédula',
-                'calificacion' => 5.0, // Mock data
+                'calificacion' => 5.0,
                 'resenas' => 0,
                 'imagen' => null
             ];
