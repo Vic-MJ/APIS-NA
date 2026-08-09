@@ -115,7 +115,13 @@ class ControladorAutenticacion extends Controller
 
         // Sincronización proactiva del perfil de Nutriólogo al iniciar sesión
         if ($usuario->rol === 'nutriologo') {
-            $datosNombre = is_string($usuario->nombre) ? json_decode($usuario->nombre, true) : $usuario->nombre;
+            // Aseguramos que el nombre sea un arreglo PHP nativo
+            $datosNombre = $usuario->nombre;
+            while (is_string($datosNombre)) {
+                $decoded = json_decode($datosNombre, true);
+                if (json_last_error() !== JSON_ERROR_NONE) break;
+                $datosNombre = $decoded;
+            }
 
             Nutriologo::updateOrCreate(
                 ['usuario.id_usuario' => (string)$usuario->_id],
@@ -128,7 +134,7 @@ class ControladorAutenticacion extends Controller
                     'cedula_profesional' => (string)$usuario->cedula,
                     'especialidad' => (string)($usuario->tipo_cedula ?? 'Nutriólogo General'),
                     'universidad' => 'Pendiente de asignar',
-                    'pacientes' => [] // Arreglo real vacío
+                    'pacientes' => [] // Forzamos arreglo real
                 ]
             );
         }

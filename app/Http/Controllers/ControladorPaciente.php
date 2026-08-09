@@ -63,25 +63,54 @@ class ControladorPaciente extends Controller
         ]);
 
         if ($actualizado) {
-            // 2. VINCULACIÓN BIDIRECCIONAL:
-            // Buscamos al nutriólogo en la colección 'nutriologos'
-            $perfilNutri = \App\Models\Nutriologo::where('usuario.id_usuario', $idNutriologo)
-                ->orWhere('usuario.id_usuario', (string)$idNutriologo)
-                ->first();
+            // VINCULACIÓN BIDIRECCIONAL:
+            // Buscamos al nutriólogo. Debido a la posible corrupción de datos, intentamos varias formas.
+
+            // Intento 1: Búsqueda normal (si los datos están limpios)
+            $perfilNutri = \App\Models\Nutriologo::where('usuario.id_usuario', $idNutriologo)->first();
+
+            // Intento 2: Búsqueda manual si la colección está corrupta (usuario es string)
+            if (!$perfilNutri) {
+                $todos = \App\Models\Nutriologo::all();
+                foreach ($todos as $n) {
+                    $uData = $n->usuario;
+                    if (is_string($uData)) {
+                        $uData = json_decode($uData, true);
+                    }
+                    if (isset($uData['id_usuario']) && $uData['id_usuario'] == $idNutriologo) {
+                        $perfilNutri = $n;
+                        break;
+                    }
+                }
+            }
 
             if ($perfilNutri) {
-                // SANITIZACIÓN: Aseguramos que sea arreglo nativo
-                $pacientesActuales = $perfilNutri->pacientes;
-                if (is_string($pacientesActuales)) {
-                    $decoded = json_decode($pacientesActuales, true);
-                    $perfilNutri->pacientes = is_array($decoded) ? $decoded : [];
+                // REPARACIÓN AL VUELO: Si detectamos que los campos son strings, los corregimos a arreglos reales
+                $camposArray = ['usuario', 'nombre', 'pacientes'];
+                foreach ($camposArray as $campo) {
+                    $val = $perfilNutri->$campo;
+                    while (is_string($val)) {
+                        $decoded = json_decode($val, true);
+                        if (json_last_error() !== JSON_ERROR_NONE) break;
+                        $val = $decoded;
+                    }
+                    // Si no es un arreglo tras decodificar, forzamos uno vacío para pacientes
+                    if (!is_array($val)) {
+                        $val = ($campo === 'pacientes') ? [] : $val;
+                    }
+                    $perfilNutri->$campo = $val;
                 }
 
-                // Añadimos al paciente al arreglo sin duplicados
-                $perfilNutri->push('pacientes', $idPaciente, true);
-
-                // Forzamos el guardado del perfil del nutriólogo
-                $perfilNutri->save();
+                // Ahora añadimos al paciente asegurándonos de que sea un arreglo real
+                $listaPacientes = is_array($perfilNutri->pacientes) ? $perfilNutri->pacientes : [];
+                if (!in_array($idPaciente, $listaPacientes)) {
+                    $listaPacientes[] = $idPaciente;
+                    $perfilNutri->pacientes = $listaPacientes;
+                    $perfilNutri->save();
+                    \Log::info("Vinculación exitosa: Paciente $idPaciente añadido a Nutri $idNutriologo");
+                }
+            } else {
+                \Log::error("No se encontró el perfil de nutriólogo para el ID: $idNutriologo");
             }
 
             return response()->json([
