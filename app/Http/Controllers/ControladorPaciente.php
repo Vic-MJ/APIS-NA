@@ -47,17 +47,25 @@ class ControladorPaciente extends Controller
             'nutriologo_id' => 'required|string'
         ]);
 
-        $usuario = \App\Models\Usuario::find(\Illuminate\Support\Facades\Auth::id());
+        /** @var \App\Models\Usuario $usuario */
+        $usuario = \Illuminate\Support\Facades\Auth::user();
+
         if (!$usuario) {
             return response()->json(['mensaje' => 'Usuario no encontrado'], 404);
         }
 
-        $usuario->nutriologo_id = $request->nutriologo_id;
-        $usuario->save();
-
-        return response()->json([
-            'mensaje' => 'Vinculación exitosa',
-            'usuario' => $usuario
+        // Actualizamos el campo nutriologo_id del usuario actual
+        $actualizado = $usuario->update([
+            'nutriologo_id' => $request->nutriologo_id
         ]);
+
+        if ($actualizado) {
+            return response()->json([
+                'mensaje' => 'Vinculación exitosa',
+                'usuario' => $usuario->fresh()
+            ]);
+        }
+
+        return response()->json(['mensaje' => 'No se pudo actualizar el registro'], 500);
     }
 }
