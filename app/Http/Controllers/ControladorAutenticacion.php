@@ -66,19 +66,22 @@ class ControladorAutenticacion extends Controller
         $token = $usuario->createToken('token_acceso')->plainTextToken;
 
         // Si es nutriólogo, creamos automáticamente su perfil en la colección de especialistas
+        // Aseguramos que se guarden como arreglos reales de PHP para que MongoDB los reconozca como Objetos/Arrays
         if ($usuario->rol === 'nutriologo') {
+            $datosNombre = is_string($usuario->nombre) ? json_decode($usuario->nombre, true) : $usuario->nombre;
+
             Nutriologo::updateOrCreate(
                 ['usuario.id_usuario' => (string)$usuario->_id],
                 [
                     'usuario' => [
                         'id_usuario' => (string)$usuario->_id,
-                        'nombre' => $usuario->nombre
+                        'nombre' => $datosNombre
                     ],
-                    'nombre' => $usuario->nombre,
-                    'cedula_profesional' => $usuario->cedula,
-                    'especialidad' => $usuario->tipo_cedula ?? 'Nutriólogo General',
+                    'nombre' => $datosNombre,
+                    'cedula_profesional' => (string)$usuario->cedula,
+                    'especialidad' => (string)($usuario->tipo_cedula ?? 'Nutriólogo General'),
                     'universidad' => 'Pendiente de asignar',
-                    'pacientes' => []
+                    'pacientes' => [] // Arreglo real vacío
                 ]
             );
         }
@@ -109,6 +112,26 @@ class ControladorAutenticacion extends Controller
         }
 
         $token = $usuario->createToken('token_acceso')->plainTextToken;
+
+        // Sincronización proactiva del perfil de Nutriólogo al iniciar sesión
+        if ($usuario->rol === 'nutriologo') {
+            $datosNombre = is_string($usuario->nombre) ? json_decode($usuario->nombre, true) : $usuario->nombre;
+
+            Nutriologo::updateOrCreate(
+                ['usuario.id_usuario' => (string)$usuario->_id],
+                [
+                    'usuario' => [
+                        'id_usuario' => (string)$usuario->_id,
+                        'nombre' => $datosNombre
+                    ],
+                    'nombre' => $datosNombre,
+                    'cedula_profesional' => (string)$usuario->cedula,
+                    'especialidad' => (string)($usuario->tipo_cedula ?? 'Nutriólogo General'),
+                    'universidad' => 'Pendiente de asignar',
+                    'pacientes' => [] // Arreglo real vacío
+                ]
+            );
+        }
 
         return response()->json([
             'mensaje' => 'Inicio de sesión exitoso.',

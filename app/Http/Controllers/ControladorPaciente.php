@@ -60,6 +60,22 @@ class ControladorPaciente extends Controller
         ]);
 
         if ($actualizado) {
+            // VINCULACIÓN BIDIRECCIONAL:
+            // Añadimos el ID del paciente a la lista de pacientes del nutriólogo
+            $nutriologo = \App\Models\Nutriologo::where('usuario.id_usuario', $request->nutriologo_id)->first();
+
+            if ($nutriologo) {
+                // SANITIZACIÓN AL VUELO: Si el campo 'pacientes' era un string por error del pasado, lo convertimos a arreglo real
+                if (is_string($nutriologo->pacientes)) {
+                    $decoded = json_decode($nutriologo->pacientes, true);
+                    $nutriologo->pacientes = is_array($decoded) ? $decoded : [];
+                    $nutriologo->save();
+                }
+
+                // Usamos push para añadir al arreglo 'pacientes' sin duplicados (true)
+                $nutriologo->push('pacientes', (string)$usuario->_id, true);
+            }
+
             return response()->json([
                 'mensaje' => 'Vinculación exitosa',
                 'usuario' => $usuario->fresh()
