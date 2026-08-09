@@ -40,4 +40,24 @@ class ControladorPaciente extends Controller
     {
         return response()->json(Paciente::where('usuario_cliente.id_usuario', (int)$idUsuario)->first());
     }
+
+    public function vincularNutriologo(Request $request)
+    {
+        $request->validate([
+            'nutriologo_id' => 'required|string'
+        ]);
+
+        $usuario = \App\Models\Usuario::find(\Illuminate\Support\Facades\Auth::id());
+        if (!$usuario) {
+            return response()->json(['mensaje' => 'Usuario no encontrado'], 404);
+        }
+
+        $usuario->nutriologo_id = $request->nutriologo_id;
+        $usuario->save();
+
+        return response()->json([
+            'mensaje' => 'Vinculación exitosa',
+            'usuario' => $usuario
+        ]);
+    }
 }

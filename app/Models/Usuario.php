@@ -36,7 +36,7 @@ class Usuario extends Authenticatable
     protected $collection = 'usuarios';
 
     protected $fillable = [
-        'nombre', 
+        'nombre',
         'correo',
         'password',
         'rol',
@@ -46,6 +46,7 @@ class Usuario extends Authenticatable
         'ine_reverso',
         'estado_validacion',
         'tipo_paciente', // 'free' o 'pro'
+        'nutriologo_id',
     ];
 
     protected $hidden = [

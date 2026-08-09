@@ -3,13 +3,30 @@
 namespace App\Http\Controllers;
 
 use App\Models\Nutriologo;
+use App\Models\Usuario;
 use Illuminate\Http\Request;
 
 class ControladorNutriologo extends Controller
 {
     public function index()
     {
-        return response()->json(Nutriologo::all());
+        // Obtenemos todos los usuarios que son nutriólogos
+        $usuariosNutriologos = Usuario::where('rol', 'nutriologo')->get();
+
+        // Los mapeamos al formato de respuesta esperado para profesionales
+        $respuesta = $usuariosNutriologos->map(function($u) {
+            return [
+                'id' => $u->_id,
+                'nombre' => $u->nombreCompleto,
+                'especialidad' => $u->tipo_cedula ?? 'Nutriólogo General',
+                'cedula' => $u->cedula ?? 'Sin cédula',
+                'calificacion' => 5.0, // Mock data
+                'resenas' => 0,
+                'imagen' => null
+            ];
+        });
+
+        return response()->json($respuesta);
     }
 
     public function store(Request $request)
