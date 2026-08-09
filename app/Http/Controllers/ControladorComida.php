@@ -12,17 +12,26 @@ class ControladorComida extends Controller
 
     public function index()
     {
-        return response()->json(Comida::all());
+        return response()->json(Comida::orderBy('created_at', 'desc')->get());
     }
 
     public function store(Request $request)
     {
-        $comida = new Comida();
-        // Guardamos id_dieta siempre como string para que el móvil no falle
-        $comida->id_dieta = (string)$request->id_dieta;
-        $comida->dia = $request->dia;
+        $idDieta = (string)$request->id_dieta;
+        $dia = $request->dia;
 
-        // Limpieza de momentos: Aseguramos que sea un Array de MongoDB y no un String JSON
+        // Buscamos si ya existe un registro para este día y dieta para evitar duplicados
+        $comida = Comida::where('id_dieta', $idDieta)
+                        ->where('dia', $dia)
+                        ->first();
+
+        if (!$comida) {
+            $comida = new Comida();
+            $comida->id_dieta = $idDieta;
+            $comida->dia = $dia;
+        }
+
+        // Sanitización de momentos: Siempre Array, nunca String
         $momentos = $request->momentos;
         if (is_string($momentos)) {
             $decoded = json_decode($momentos, true);
@@ -30,8 +39,9 @@ class ControladorComida extends Controller
                 $momentos = $decoded;
             }
         }
-        $comida->momentos = $momentos;
 
+        $comida->unset('momentos'); // Limpiamos para evitar mezclas en Mongo
+        $comida->momentos = $momentos;
         $comida->save();
 
         return response()->json($comida, 201);
@@ -44,7 +54,15 @@ class ControladorComida extends Controller
 
     public function update(Request $request, $id)
     {
-        $comida = Comida::findOrFail($id);
+        // En Laravel-MongoDB, a veces el ID viene como el documento entero o solo el string
+        $comida = Comida::find($id);
+
+        if (!$comida) {
+            // Si no lo encuentra por ID, intentamos por Dieta y Dia (Robustez)
+            $comida = Comida::where('id_dieta', (string)$request->id_dieta)
+                            ->where('dia', $request->dia)
+                            ->firstOrFail();
+        }
 
         if ($request->has('id_dieta')) {
             $comida->id_dieta = (string)$request->id_dieta;
@@ -60,7 +78,6 @@ class ControladorComida extends Controller
                     $momentos = $decoded;
                 }
             }
-            // Unset first to force MongoDB driver to recognize the array mutation completely
             $comida->unset('momentos');
             $comida->momentos = $momentos;
         }
