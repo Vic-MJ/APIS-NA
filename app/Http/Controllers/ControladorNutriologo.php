@@ -11,13 +11,14 @@ class ControladorNutriologo extends Controller
     public function index()
     {
         // Obtenemos todos los usuarios que son nutriólogos
+        // Usamos where('rol', 'nutriologo') para asegurar coincidencia exacta
         $usuariosNutriologos = Usuario::where('rol', 'nutriologo')->get();
 
         // Los mapeamos al formato de respuesta esperado para profesionales
         $respuesta = $usuariosNutriologos->map(function($u) {
             return [
-                'id' => $u->_id,
-                'nombre' => $u->nombreCompleto,
+                'id' => (string)$u->_id,
+                'nombre' => $u->nombre_completo,
                 'especialidad' => $u->tipo_cedula ?? 'Nutriólogo General',
                 'cedula' => $u->cedula ?? 'Sin cédula',
                 'calificacion' => 5.0, // Mock data

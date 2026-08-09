@@ -72,4 +72,12 @@ class Usuario extends Authenticatable
     {
         $this->correo = $value;
     }
+
+    public function getNombreCompletoAttribute()
+    {
+        if (is_array($this->nombre)) {
+            return trim(($this->nombre['nombres'] ?? '') . ' ' . ($this->nombre['apellido_p'] ?? ''));
+        }
+        return $this->correo;
+    }
 }
