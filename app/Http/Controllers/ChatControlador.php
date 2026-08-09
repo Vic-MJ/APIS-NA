@@ -129,7 +129,7 @@ class ChatControlador extends Controller
     public function obtenerPacientes()
     {
         $pacientes = Usuario::where('rol', 'paciente')
-            ->get(['_id', 'nombre', 'correo']);
+            ->get(['_id', 'nombre', 'correo', 'nutriologo_id']);
         
         return response()->json($pacientes);
     }
