@@ -22,7 +22,7 @@ class ControladorComida extends Controller
         $comida->dia = $request->dia;
         $comida->momentos = $request->momentos;
         $comida->save();
-        
+
         return response()->json($comida, 201);
     }
 
@@ -34,7 +34,7 @@ class ControladorComida extends Controller
     public function update(Request $request, $id)
     {
         $comida = Comida::findOrFail($id);
-        
+
         if ($request->has('id_dieta')) {
             $comida->id_dieta = $request->id_dieta;
         }
@@ -46,9 +46,9 @@ class ControladorComida extends Controller
             $comida->unset('momentos');
             $comida->momentos = $request->momentos;
         }
-        
+
         $comida->save();
-        
+
         return response()->json($comida);
     }
 
@@ -60,9 +60,15 @@ class ControladorComida extends Controller
 
     public function porDietaYDia($dietaId, $dia)
     {
-        $comidas = Comida::where('id_dieta', $dietaId)
-            ->where('dia', $dia)
-            ->get();
+        // Flexibilizamos para buscar por ID string o numérico
+        $comidas = Comida::where(function($query) use ($dietaId) {
+            $query->where('id_dieta', $dietaId)
+                  ->orWhere('id_dieta', (int)$dietaId)
+                  ->orWhere('id_dieta', (string)$dietaId);
+        })
+        ->where('dia', $dia)
+        ->get();
+
         return response()->json($comidas);
     }
 
@@ -153,7 +159,7 @@ class ControladorComida extends Controller
 
             $resultados = [];
             $queryLower = mb_strtolower(trim($query));
-            
+
             foreach ($mockFoods as $key => $food) {
                 if (strpos($key, $queryLower) !== false || strpos(mb_strtolower($food['alimento']), $queryLower) !== false) {
                     $resultados[] = $food;
@@ -187,7 +193,7 @@ class ControladorComida extends Controller
                 if (isset($data['hints'])) {
                     foreach (array_slice($data['hints'], 0, 5) as $hint) {
                         $food = $hint['food'];
-                        
+
                         $categoria = $food['category'] ?? 'Generic foods';
                         $grupo = 'Otros';
                         if (stripos($categoria, 'poultry') !== false || stripos($categoria, 'meat') !== false || stripos($categoria, 'fish') !== false || stripos($categoria, 'egg') !== false) {
