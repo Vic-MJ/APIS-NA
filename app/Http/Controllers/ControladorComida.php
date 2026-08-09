@@ -35,15 +35,19 @@ class ControladorComida extends Controller
     {
         $comida = Comida::findOrFail($id);
         
-        $updateData = [];
-        if ($request->has('id_dieta')) $updateData['id_dieta'] = $request->id_dieta;
-        if ($request->has('dia')) $updateData['dia'] = $request->dia;
-        if ($request->has('momentos')) $updateData['momentos'] = $request->momentos;
+        if ($request->has('id_dieta')) {
+            $comida->id_dieta = $request->id_dieta;
+        }
+        if ($request->has('dia')) {
+            $comida->dia = $request->dia;
+        }
+        if ($request->has('momentos')) {
+            // Unset first to force MongoDB driver to recognize the array mutation completely
+            $comida->unset('momentos');
+            $comida->momentos = $request->momentos;
+        }
         
-        Comida::where('_id', $id)->update($updateData);
-        
-        // Fetch fresh to return
-        $comida = Comida::findOrFail($id);
+        $comida->save();
         
         return response()->json($comida);
     }
