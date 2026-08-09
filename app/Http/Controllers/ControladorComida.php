@@ -24,7 +24,11 @@ class ControladorComida extends Controller
     {
         $idDieta = (string)$request->id_dieta;
         $dia = $request->dia;
-        $usuarioId = Auth::id();
+        $usuarioId = (string)Auth::id(); // Forzamos ID como string para evitar fallos de tipo
+
+        if (!$usuarioId) {
+            return response()->json(['mensaje' => 'No autenticado'], 401);
+        }
 
         // Buscamos si ya existe un registro para este día y dieta de ESTE usuario
         $comida = Comida::where('usuario_id', $usuarioId)
@@ -49,9 +53,15 @@ class ControladorComida extends Controller
 
         $comida->unset('momentos'); // Limpiamos para evitar mezclas en Mongo
         $comida->momentos = $momentos;
-        $comida->save();
 
-        return response()->json($comida, 201);
+        if ($comida->save()) {
+            return response()->json([
+                'mensaje' => 'Comida guardada exitosamente en BD',
+                'datos' => $comida
+            ], 201);
+        }
+
+        return response()->json(['mensaje' => 'Error crítico al escribir en la base de datos'], 500);
     }
 
     public function show($id)

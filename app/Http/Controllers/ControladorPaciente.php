@@ -51,37 +51,46 @@ class ControladorPaciente extends Controller
         $usuario = \Illuminate\Support\Facades\Auth::user();
 
         if (!$usuario) {
-            return response()->json(['mensaje' => 'Usuario no encontrado'], 404);
+            return response()->json(['mensaje' => 'Usuario no encontrado en sesión'], 401);
         }
 
-        // Actualizamos el campo nutriologo_id del usuario actual
+        $idPaciente = (string)$usuario->_id;
+        $idNutriologo = (string)$request->nutriologo_id;
+
+        // 1. Actualización del Paciente
         $actualizado = $usuario->update([
-            'nutriologo_id' => $request->nutriologo_id
+            'nutriologo_id' => $idNutriologo
         ]);
 
         if ($actualizado) {
-            // VINCULACIÓN BIDIRECCIONAL:
-            // Añadimos el ID del paciente a la lista de pacientes del nutriólogo
-            $nutriologo = \App\Models\Nutriologo::where('usuario.id_usuario', $request->nutriologo_id)->first();
+            // 2. VINCULACIÓN BIDIRECCIONAL:
+            // Buscamos al nutriólogo en la colección 'nutriologos'
+            $perfilNutri = \App\Models\Nutriologo::where('usuario.id_usuario', $idNutriologo)
+                ->orWhere('usuario.id_usuario', (string)$idNutriologo)
+                ->first();
 
-            if ($nutriologo) {
-                // SANITIZACIÓN AL VUELO: Si el campo 'pacientes' era un string por error del pasado, lo convertimos a arreglo real
-                if (is_string($nutriologo->pacientes)) {
-                    $decoded = json_decode($nutriologo->pacientes, true);
-                    $nutriologo->pacientes = is_array($decoded) ? $decoded : [];
-                    $nutriologo->save();
+            if ($perfilNutri) {
+                // SANITIZACIÓN: Aseguramos que sea arreglo nativo
+                $pacientesActuales = $perfilNutri->pacientes;
+                if (is_string($pacientesActuales)) {
+                    $decoded = json_decode($pacientesActuales, true);
+                    $perfilNutri->pacientes = is_array($decoded) ? $decoded : [];
                 }
 
-                // Usamos push para añadir al arreglo 'pacientes' sin duplicados (true)
-                $nutriologo->push('pacientes', (string)$usuario->_id, true);
+                // Añadimos al paciente al arreglo sin duplicados
+                $perfilNutri->push('pacientes', $idPaciente, true);
+
+                // Forzamos el guardado del perfil del nutriólogo
+                $perfilNutri->save();
             }
 
             return response()->json([
-                'mensaje' => 'Vinculación exitosa',
-                'usuario' => $usuario->fresh()
+                'mensaje' => 'Vinculación establecida correctamente',
+                'usuario' => $usuario->fresh(),
+                'viculado_a' => $idNutriologo
             ]);
         }
 
-        return response()->json(['mensaje' => 'No se pudo actualizar el registro'], 500);
+        return response()->json(['mensaje' => 'Error al intentar guardar la vinculación'], 500);
     }
 }
