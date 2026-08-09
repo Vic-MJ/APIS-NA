@@ -54,11 +54,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Solo admins o nutriólogos pueden gestionar pacientes y consultas
     Route::middleware('rol:admin,nutriologo')->group(function () {
         Route::apiResource('consultas', ControladorConsulta::class);
-        Route::apiResource('nutriologos', ControladorNutriologo::class);
         Route::apiResource('pacientes', ControladorPaciente::class);
     });
 
     // Rutas accesibles por todos los autenticados (con lógica interna por ID de usuario)
+    Route::apiResource('nutriologos', ControladorNutriologo::class);
     Route::post('/pacientes/vincular', [ControladorPaciente::class, 'vincularNutriologo']);
     Route::apiResource('dietas', ControladorDieta::class);
     Route::apiResource('comidas', ControladorComida::class);
