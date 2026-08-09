@@ -10,6 +10,7 @@ class Comida extends Model
     protected $collection = 'comidas';
 
     protected $fillable = [
+        'usuario_id',
         'id_dieta',
         'dia',
         'momentos', // [{ tiempo, hora_sugerida, descripcion, calorias, foto, porcioneso, cantidad, unidad, grupo_alimenticio }] }]

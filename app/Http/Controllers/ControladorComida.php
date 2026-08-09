@@ -12,21 +12,28 @@ class ControladorComida extends Controller
 
     public function index()
     {
-        return response()->json(Comida::orderBy('created_at', 'desc')->get());
+        // Solo devolvemos las comidas que pertenecen al usuario autenticado
+        return response()->json(
+            Comida::where('usuario_id', Auth::id())
+                ->orderBy('created_at', 'desc')
+                ->get()
+        );
     }
 
     public function store(Request $request)
     {
         $idDieta = (string)$request->id_dieta;
         $dia = $request->dia;
+        $usuarioId = Auth::id();
 
-        // Buscamos si ya existe un registro para este día y dieta para evitar duplicados
-        $comida = Comida::where('id_dieta', $idDieta)
+        // Buscamos si ya existe un registro para este día y dieta de ESTE usuario
+        $comida = Comida::where('usuario_id', $usuarioId)
                         ->where('dia', $dia)
                         ->first();
 
         if (!$comida) {
             $comida = new Comida();
+            $comida->usuario_id = $usuarioId;
             $comida->id_dieta = $idDieta;
             $comida->dia = $dia;
         }
@@ -54,12 +61,15 @@ class ControladorComida extends Controller
 
     public function update(Request $request, $id)
     {
-        // En Laravel-MongoDB, a veces el ID viene como el documento entero o solo el string
-        $comida = Comida::find($id);
+        // Solo permitimos editar si el registro pertenece al usuario autenticado
+        $comida = Comida::where('_id', $id)
+                        ->where('usuario_id', Auth::id())
+                        ->first();
 
         if (!$comida) {
             // Si no lo encuentra por ID, intentamos por Dieta y Dia (Robustez)
-            $comida = Comida::where('id_dieta', (string)$request->id_dieta)
+            $comida = Comida::where('usuario_id', Auth::id())
+                            ->where('id_dieta', (string)$request->id_dieta)
                             ->where('dia', $request->dia)
                             ->firstOrFail();
         }
@@ -95,14 +105,15 @@ class ControladorComida extends Controller
 
     public function porDietaYDia($dietaId, $dia)
     {
-        // Flexibilizamos para buscar por ID string o numérico
-        $comidas = Comida::where(function($query) use ($dietaId) {
-            $query->where('id_dieta', $dietaId)
-                  ->orWhere('id_dieta', (int)$dietaId)
-                  ->orWhere('id_dieta', (string)$dietaId);
-        })
-        ->where('dia', $dia)
-        ->get();
+        // Solo devolvemos si pertenece al usuario autenticado
+        $comidas = Comida::where('usuario_id', Auth::id())
+            ->where(function($query) use ($dietaId) {
+                $query->where('id_dieta', $dietaId)
+                      ->orWhere('id_dieta', (int)$dietaId)
+                      ->orWhere('id_dieta', (string)$dietaId);
+            })
+            ->where('dia', $dia)
+            ->get();
 
         return response()->json($comidas);
     }
