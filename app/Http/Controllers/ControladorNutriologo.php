@@ -15,20 +15,24 @@ class ControladorNutriologo extends Controller
 
         // Los mapeamos al formato de respuesta esperado para profesionales
         $respuesta = $usuariosNutriologos->map(function($u) {
-            // Aseguramos que el nombre nunca sea nulo para que la App no ignore el registro
+            // Aseguramos que el nombre nunca sea nulo
             $nombreAMostrar = $u->nombre_completo;
-            if (empty($nombreAMostrar) || $nombreAMostrar === $u->correo) {
-                 // Si no tiene nombre estructurado, intentamos armarlo manualmente del campo nombre si es array
+            if (empty($nombreAMostrar)) {
                  if (is_array($u->nombre)) {
                      $nombreAMostrar = trim(($u->nombre['nombres'] ?? '') . ' ' . ($u->nombre['apellido_p'] ?? ''));
                  }
             }
 
+            // Fallback final: Correo o nombre genérico
+            if (empty($nombreAMostrar)) {
+                $nombreAMostrar = $u->correo ?? "Especialista Nutricional";
+            }
+
             return [
                 'id' => (string)$u->_id,
-                'nombre' => !empty($nombreAMostrar) ? $nombreAMostrar : $u->correo,
-                'especialidad' => $u->tipo_cedula ?? 'Nutriólogo General',
-                'cedula' => $u->cedula ?? 'Sin cédula',
+                'nombre' => (string)$nombreAMostrar,
+                'especialidad' => (string)($u->tipo_cedula ?? 'Nutriólogo General'),
+                'cedula' => (string)($u->cedula ?? 'Sin cédula'),
                 'calificacion' => 5.0,
                 'resenas' => 0,
                 'imagen' => null
