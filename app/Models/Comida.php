@@ -17,5 +17,6 @@ class Comida extends Model
 
     protected $casts = [
         'momentos' => 'array',
+        'id_dieta' => 'string',
     ];
 }

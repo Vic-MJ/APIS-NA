@@ -18,9 +18,20 @@ class ControladorComida extends Controller
     public function store(Request $request)
     {
         $comida = new Comida();
-        $comida->id_dieta = $request->id_dieta;
+        // Guardamos id_dieta siempre como string para que el móvil no falle
+        $comida->id_dieta = (string)$request->id_dieta;
         $comida->dia = $request->dia;
-        $comida->momentos = $request->momentos;
+
+        // Limpieza de momentos: Aseguramos que sea un Array de MongoDB y no un String JSON
+        $momentos = $request->momentos;
+        if (is_string($momentos)) {
+            $decoded = json_decode($momentos, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $momentos = $decoded;
+            }
+        }
+        $comida->momentos = $momentos;
+
         $comida->save();
 
         return response()->json($comida, 201);
@@ -36,15 +47,22 @@ class ControladorComida extends Controller
         $comida = Comida::findOrFail($id);
 
         if ($request->has('id_dieta')) {
-            $comida->id_dieta = $request->id_dieta;
+            $comida->id_dieta = (string)$request->id_dieta;
         }
         if ($request->has('dia')) {
             $comida->dia = $request->dia;
         }
         if ($request->has('momentos')) {
+            $momentos = $request->momentos;
+            if (is_string($momentos)) {
+                $decoded = json_decode($momentos, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $momentos = $decoded;
+                }
+            }
             // Unset first to force MongoDB driver to recognize the array mutation completely
             $comida->unset('momentos');
-            $comida->momentos = $request->momentos;
+            $comida->momentos = $momentos;
         }
 
         $comida->save();
