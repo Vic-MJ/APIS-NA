@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Usuario;
+use App\Models\Nutriologo;
 use App\Services\ServicioValidacionIdentidad;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -63,6 +64,24 @@ class ControladorAutenticacion extends Controller
         ]);
 
         $token = $usuario->createToken('token_acceso')->plainTextToken;
+
+        // Si es nutriólogo, creamos automáticamente su perfil en la colección de especialistas
+        if ($usuario->rol === 'nutriologo') {
+            Nutriologo::updateOrCreate(
+                ['usuario.id_usuario' => (string)$usuario->_id],
+                [
+                    'usuario' => [
+                        'id_usuario' => (string)$usuario->_id,
+                        'nombre' => $usuario->nombre
+                    ],
+                    'nombre' => $usuario->nombre,
+                    'cedula_profesional' => $usuario->cedula,
+                    'especialidad' => $usuario->tipo_cedula ?? 'Nutriólogo General',
+                    'universidad' => 'Pendiente de asignar',
+                    'pacientes' => []
+                ]
+            );
+        }
 
         return response()->json([
             'mensaje' => 'Usuario registrado exitosamente',

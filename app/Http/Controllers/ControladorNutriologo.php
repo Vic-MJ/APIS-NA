@@ -10,29 +10,23 @@ class ControladorNutriologo extends Controller
 {
     public function index()
     {
-        // Obtenemos todos los usuarios que tienen rol de nutriologo (insensible a mayúsculas)
-        $usuariosNutriologos = Usuario::where('rol', 'regexp', '/nutriologo/i')->get();
+        // Obtenemos a los profesionales directamente de su colección (nutriologos)
+        $nutriologos = Nutriologo::all();
 
         // Los mapeamos al formato de respuesta esperado para profesionales
-        $respuesta = $usuariosNutriologos->map(function($u) {
-            // Aseguramos que el nombre nunca sea nulo
-            $nombreAMostrar = $u->nombre_completo;
-            if (empty($nombreAMostrar)) {
-                 if (is_array($u->nombre)) {
-                     $nombreAMostrar = trim(($u->nombre['nombres'] ?? '') . ' ' . ($u->nombre['apellido_p'] ?? ''));
-                 }
-            }
+        $respuesta = $nutriologos->map(function($n) {
+            $nombreArray = $n->nombre;
+            $nombreStr = "Especialista";
 
-            // Fallback final: Correo o nombre genérico
-            if (empty($nombreAMostrar)) {
-                $nombreAMostrar = $u->correo ?? "Especialista Nutricional";
+            if (is_array($nombreArray)) {
+                $nombreStr = trim(($nombreArray['nombres'] ?? '') . ' ' . ($nombreArray['apellido_p'] ?? ''));
             }
 
             return [
-                'id' => (string)$u->_id,
-                'nombre' => (string)$nombreAMostrar,
-                'especialidad' => (string)($u->tipo_cedula ?? 'Nutriólogo General'),
-                'cedula' => (string)($u->cedula ?? 'Sin cédula'),
+                'id' => (string)$n->_id,
+                'nombre' => $nombreStr,
+                'especialidad' => (string)($n->especialidad ?? 'Nutriólogo General'),
+                'cedula' => (string)($n->cedula_profesional ?? 'Sin cédula'),
                 'calificacion' => 5.0,
                 'resenas' => 0,
                 'imagen' => null
