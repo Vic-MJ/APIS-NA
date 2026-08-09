@@ -34,12 +34,16 @@ class ControladorComida extends Controller
     public function update(Request $request, $id)
     {
         $comida = Comida::findOrFail($id);
-        if ($request->has('id_dieta')) $comida->id_dieta = $request->id_dieta;
-        if ($request->has('dia')) $comida->dia = $request->dia;
-        if ($request->has('momentos')) $comida->momentos = $request->momentos;
         
-        // Force the save in case the MongoDB driver misses the deep array change
-        $comida->save();
+        $updateData = [];
+        if ($request->has('id_dieta')) $updateData['id_dieta'] = $request->id_dieta;
+        if ($request->has('dia')) $updateData['dia'] = $request->dia;
+        if ($request->has('momentos')) $updateData['momentos'] = $request->momentos;
+        
+        Comida::where('_id', $id)->update($updateData);
+        
+        // Fetch fresh to return
+        $comida = Comida::findOrFail($id);
         
         return response()->json($comida);
     }
