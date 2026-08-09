@@ -17,7 +17,12 @@ class ControladorComida extends Controller
 
     public function store(Request $request)
     {
-        $comida = Comida::create($request->all());
+        $comida = new Comida();
+        $comida->id_dieta = $request->id_dieta;
+        $comida->dia = $request->dia;
+        $comida->momentos = $request->momentos;
+        $comida->save();
+        
         return response()->json($comida, 201);
     }
 
@@ -29,7 +34,13 @@ class ControladorComida extends Controller
     public function update(Request $request, $id)
     {
         $comida = Comida::findOrFail($id);
-        $comida->update($request->all());
+        if ($request->has('id_dieta')) $comida->id_dieta = $request->id_dieta;
+        if ($request->has('dia')) $comida->dia = $request->dia;
+        if ($request->has('momentos')) $comida->momentos = $request->momentos;
+        
+        // Force the save in case the MongoDB driver misses the deep array change
+        $comida->save();
+        
         return response()->json($comida);
     }
 
