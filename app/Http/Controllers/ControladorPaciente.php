@@ -122,4 +122,36 @@ class ControladorPaciente extends Controller
 
         return response()->json(['mensaje' => 'Error al intentar guardar la vinculación'], 500);
     }
+
+    public function desvincularNutriologo()
+    {
+        /** @var \App\Models\Usuario $usuario */
+        $usuario = \Illuminate\Support\Facades\Auth::user();
+
+        if (!$usuario) {
+            return response()->json(['mensaje' => 'Usuario no encontrado'], 401);
+        }
+
+        $idNutriologo = $usuario->nutriologo_id;
+
+        if ($idNutriologo) {
+            // Buscamos al nutriólogo para quitar al paciente de su lista
+            $perfilNutri = \App\Models\Nutriologo::where('usuario.id_usuario', $idNutriologo)
+                ->orWhere('usuario.id_usuario', (string)$idNutriologo)
+                ->first();
+
+            if ($perfilNutri) {
+                // Removemos el ID del paciente del arreglo 'pacientes'
+                $perfilNutri->pull('pacientes', (string)$usuario->_id);
+            }
+        }
+
+        // Limpiamos el vínculo en el usuario
+        $usuario->update(['nutriologo_id' => null]);
+
+        return response()->json([
+            'mensaje' => 'Desvinculación exitosa',
+            'usuario' => $usuario->fresh()
+        ]);
+    }
 }

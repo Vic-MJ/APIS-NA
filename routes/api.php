@@ -60,6 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rutas accesibles por todos los autenticados (con lógica interna por ID de usuario)
     Route::apiResource('nutriologos', ControladorNutriologo::class);
     Route::post('/pacientes/vincular', [ControladorPaciente::class, 'vincularNutriologo']);
+    Route::post('/pacientes/desvincular', [ControladorPaciente::class, 'desvincularNutriologo']);
     Route::apiResource('dietas', ControladorDieta::class);
     Route::apiResource('comidas', ControladorComida::class);
     Route::apiResource('actividades', ControladorActividad::class);
