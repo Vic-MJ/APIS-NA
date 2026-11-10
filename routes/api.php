@@ -17,14 +17,19 @@ use App\Http\Controllers\ChatControlador;
 use App\Http\Controllers\NotificacionControlador;
 use App\Http\Controllers\PerfilControlador;
 
-Route::middleware('throttle:5,1')->post('/login', [ControladorAutenticacion::class, 'iniciarSesion']);
+// ===================================================
 // Rutas de Autenticación (Públicas)
+// ===================================================
+Route::middleware('throttle:5,1')->post('/login', [ControladorAutenticacion::class, 'iniciarSesion']);
+
 Route::middleware('throttle:10,1')->group(function () {
     Route::post('/registro', [ControladorAutenticacion::class, 'registro']);
     Route::get('/validar-cedula/{cedula}', [ControladorAutenticacion::class, 'consultarCedula']);
 });
 
+// ===================================================
 // Rutas Protegidas por Sanctum
+// ===================================================
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/usuario-actual', function (Request $request) {
@@ -39,25 +44,24 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/respaldos/descargar/{archivo}', [ControladorAdministrador::class, 'descargarRespaldo'])->name('descargar-respaldo');
         Route::delete('/respaldos/eliminar/{archivo}', [ControladorAdministrador::class, 'eliminarRespaldo']);
 
-        // Rutas de gestión de Base de Datos
+        // Gestión de Base de Datos
         Route::get('/db/colecciones', [ControladorAdministrador::class, 'listarColecciones']);
         Route::get('/db/salud', [ControladorAdministrador::class, 'estadoSaludBd']);
         Route::post('/db/reparar-secuencias', [ControladorAdministrador::class, 'repararSecuencias']);
 
-        // Rutas de Ajustes de Sistema
+        // Ajustes del Sistema
         Route::get('/configuraciones', [ControladorAdministrador::class, 'obtenerConfiguraciones']);
         Route::post('/configuraciones', [ControladorAdministrador::class, 'actualizarConfiguraciones']);
         Route::post('/mantenimiento/ejecutar', [ControladorAdministrador::class, 'ejecutarTareaMantenimiento']);
     });
 
     // --- BLOQUE CLÍNICO / DATOS ---
-    // Solo admins o nutriólogos pueden gestionar pacientes y consultas
     Route::middleware('rol:admin,nutriologo')->group(function () {
         Route::apiResource('consultas', ControladorConsulta::class);
         Route::apiResource('pacientes', ControladorPaciente::class);
     });
 
-    // Rutas accesibles por todos los autenticados (con lógica interna por ID de usuario)
+    // Recursos Principales (CRUDs)
     Route::apiResource('nutriologos', ControladorNutriologo::class);
     Route::post('/pacientes/vincular', [ControladorPaciente::class, 'vincularNutriologo']);
     Route::post('/pacientes/desvincular', [ControladorPaciente::class, 'desvincularNutriologo']);
@@ -68,13 +72,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('rutinas', ControladorRutina::class);
     Route::apiResource('wearables', ControladorWearable::class);
 
-    // Rutas Extra (Consultas Específicas)
+    // --- BLOQUE EXTRA (Consultas Específicas / Búsquedas) ---
     Route::prefix('extra')->group(function () {
         Route::get('/consultas/usuario/{usuarioId}', [ControladorConsulta::class, 'porUsuario']);
         Route::get('/dietas/activas/{usuarioId}', [ControladorDieta::class, 'activas']);
+        
+        // Comidas filtradas por Dieta y Día
         Route::get('/comidas/dieta/{dietaId}/dia/{dia}', [ControladorComida::class, 'porDietaYDia']);
+        
+        // Búsqueda de Alimentos y Edamam
         Route::get('/equivalencias/buscar', [ControladorEquivalenciaAlimento::class, 'buscar']);
         Route::get('/equivalencias/edamam', [ControladorEquivalenciaAlimento::class, 'buscarEquivalentes']);
+        
         Route::get('/rutinas/dificultad/{nivel}', [ControladorRutina::class, 'porNivel']);
         Route::get('/nutriologos/especialidad/{especialidad}', [ControladorNutriologo::class, 'porEspecialidad']);
         Route::get('/pacientes/usuario/{idUsuario}', [ControladorPaciente::class, 'buscar']);
