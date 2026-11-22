@@ -215,9 +215,8 @@ class ControladorAutenticacion extends Controller
         } catch (\Exception $e) {
             \Log::error('Error enviando correo SMTP de recuperación: ' . $e->getMessage());
             return response()->json([
-                'mensaje' => 'Código generado (configura Contraseña de Aplicación de Google para envío SMTP directo).',
-                'codigo_verificacion_Generado' => $codigo
-            ]);
+                'mensaje' => 'No se pudo enviar el correo de verificación: ' . $e->getMessage()
+            ], 500);
         }
 
         return response()->json([
@@ -367,9 +366,8 @@ class ControladorAutenticacion extends Controller
         } catch (\Exception $e) {
             \Log::error('Error enviando correo SMTP de verificación de registro: ' . $e->getMessage());
             return response()->json([
-                'mensaje' => 'Código generado (configura Contraseña de Aplicación de Google para envío SMTP directo).',
-                'codigo_verificacion_Generado' => $codigo
-            ]);
+                'mensaje' => 'No se pudo enviar el correo de verificación: ' . $e->getMessage()
+            ], 500);
         }
 
         return response()->json([
