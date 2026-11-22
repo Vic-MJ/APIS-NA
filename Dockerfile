@@ -16,14 +16,14 @@ RUN apt-get update && apt-get install -y \
     && pecl install mongodb \
     && docker-php-ext-enable mongodb
 
-# Fix MPM conflict and enable mod_rewrite
+# Fix Apache MPM conflict on Railway and enable mod_rewrite
 RUN a2dismod mpm_event mpm_worker || true \
-    && a2enmod mpm_prefork rewrite
+    && a2enmod mpm_prefork rewrite headers
 
 # Update Apache DocumentRoot to point to Laravel's public folder
-ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \
+    && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -40,5 +40,6 @@ RUN composer install --no-dev --optimize-autoloader
 # Set proper permissions for Laravel
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Configure Apache to listen on Railway's dynamic PORT and clean up MPM symlinks at runtime
-CMD ["sh", "-c", "rm -f /etc/apache2/mods-enabled/mpm_event.* /etc/apache2/mods-enabled/mpm_worker.* && sed -i \"s/80/\${PORT:-80}/g\" /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf && apache2-foreground"]
+EXPOSE 80 8000
+
+CMD ["sh", "-c", "a2dismod mpm_event mpm_worker 2>/dev/null || true; a2enmod mpm_prefork 2>/dev/null || true; if [ -n \"$PORT\" ] && [ \"$PORT\" != \"80\" ]; then sed -i \"s/Listen 80/Listen 80\\nListen $PORT/g\" /etc/apache2/ports.conf; sed -i \"s/<VirtualHost \\*:80>/<VirtualHost *:80 *:$PORT>/g\" /etc/apache2/sites-available/000-default.conf; fi; apache2-foreground"]
