@@ -47,11 +47,18 @@ class Usuario extends Authenticatable
         'estado_validacion',
         'tipo_paciente', // 'free' o 'pro'
         'nutriologo_id',
+        'codigo_recuperacion',
+        'codigo_recuperacion_expira',
+        'correo_verificado',
+        'codigo_verificacion_correo',
+        'codigo_verificacion_expira',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'codigo_recuperacion',
+        'codigo_verificacion_correo',
     ];
 
     protected function casts(): array

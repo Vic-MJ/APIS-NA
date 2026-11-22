@@ -25,6 +25,11 @@ Route::middleware('throttle:5,1')->post('/login', [ControladorAutenticacion::cla
 Route::middleware('throttle:10,1')->group(function () {
     Route::post('/registro', [ControladorAutenticacion::class, 'registro']);
     Route::get('/validar-cedula/{cedula}', [ControladorAutenticacion::class, 'consultarCedula']);
+    Route::post('/verificar-correo/enviar', [ControladorAutenticacion::class, 'enviarCodigoVerificacionCorreo']);
+    Route::post('/verificar-correo/confirmar', [ControladorAutenticacion::class, 'confirmarCodigoVerificacionCorreo']);
+    Route::post('/recuperar-password/solicitar', [ControladorAutenticacion::class, 'solicitarRecuperacion']);
+    Route::post('/recuperar-password/verificar', [ControladorAutenticacion::class, 'verificarCodigoRecuperacion']);
+    Route::post('/recuperar-password/restablecer', [ControladorAutenticacion::class, 'restablecerPassword']);
 });
 
 // ===================================================
