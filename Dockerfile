@@ -31,11 +31,19 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
 
+# Copy ONLY composer files first so Docker caches all 91 PHP packages across deployments
+ENV COMPOSER_ALLOW_SUPERUSER=1
+COPY composer.json composer.lock ./
+
+# Install PHP dependencies via Composer (cached layer + git fallback if GitHub zipball API returns 504)
+RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-interaction \
+    || composer install --no-dev --no-scripts --no-autoloader --prefer-source --no-interaction
+
 # Copy the rest of the application
 COPY . .
 
-# Install PHP dependencies via Composer
-RUN composer install --no-dev --optimize-autoloader
+# Generate optimized autoloader
+RUN composer dump-autoload --optimize --no-dev
 
 # Set proper permissions for Laravel
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
