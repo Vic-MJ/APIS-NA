@@ -163,6 +163,20 @@ class ControladorAutenticacion extends Controller
         return response()->json($datos);
     }
 
+    private function configurarMailerNourish(): void
+    {
+        config([
+            'mail.default' => 'smtp',
+            'mail.mailers.smtp.host' => 'smtp.gmail.com',
+            'mail.mailers.smtp.port' => 587,
+            'mail.mailers.smtp.username' => 'nourish.app.verify@gmail.com',
+            'mail.mailers.smtp.password' => 'euadxgcargrzfvnx',
+            'mail.from.address' => 'nourish.app.verify@gmail.com',
+            'mail.from.name' => 'Nourish - Nutrición y Salud',
+        ]);
+        app('mail.manager')->purge('smtp');
+    }
+
     public function solicitarRecuperacion(Request $request)
     {
         $request->validate([
@@ -208,8 +222,10 @@ class ControladorAutenticacion extends Controller
         </div>";
 
         try {
+            $this->configurarMailerNourish();
             Mail::html($htmlCorreo, function ($message) use ($correo, $nombreDestinatario) {
-                $message->to($correo, $nombreDestinatario)
+                $message->from('nourish.app.verify@gmail.com', 'Nourish - Nutrición y Salud')
+                        ->to($correo, $nombreDestinatario)
                         ->subject('Código de verificación para recuperar tu contraseña - Nourish');
             });
         } catch (\Exception $e) {
@@ -359,8 +375,10 @@ class ControladorAutenticacion extends Controller
         </div>";
 
         try {
+            $this->configurarMailerNourish();
             Mail::html($htmlCorreo, function ($message) use ($correo, $nombreDestinatario) {
-                $message->to($correo, $nombreDestinatario)
+                $message->from('nourish.app.verify@gmail.com', 'Nourish - Nutrición y Salud')
+                        ->to($correo, $nombreDestinatario)
                         ->subject('Código de verificación de correo - Nourish');
             });
         } catch (\Exception $e) {

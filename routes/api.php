@@ -100,6 +100,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('chat')->group(function () {
         Route::get('/conversaciones', [ChatControlador::class, 'obtenerConversaciones']);
         Route::get('/mensajes/{otroUsuarioId}', [ChatControlador::class, 'obtenerMensajes']);
+        Route::get('/estado/{otroUsuarioId}', [ChatControlador::class, 'estadoUsuario']);
         Route::post('/enviar', [ChatControlador::class, 'enviarMensaje']);
         Route::get('/disponibles/nutriologos', [ChatControlador::class, 'obtenerNutriologos']);
         Route::get('/disponibles/pacientes', [ChatControlador::class, 'obtenerPacientes']);

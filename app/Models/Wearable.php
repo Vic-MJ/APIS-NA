@@ -10,10 +10,14 @@ class Wearable extends Model
     protected $collection = 'wearables';
 
     protected $fillable = [
+        'usuario_id',
         'usuario_cliente', // { id_usuario, nombre: { nombres, apellido_p, apellido_m } }
         'nombre', // { nombres, apellido_p, apellido_m }
         'marca_dispositivo',
         'metricas_diarias', // { pasos, kcal_quemadas, horas_sueno, ritmo_cardiaco_promedio }
+        'pasos',
+        'kcal_quemadas',
+        'ritmo_cardiaco',
         'ultima_sincronizacion',
     ];
 

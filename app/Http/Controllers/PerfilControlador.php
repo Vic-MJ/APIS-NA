@@ -51,6 +51,19 @@ class PerfilControlador extends Controller
             $usuario->tipo_paciente = $request->tipo_paciente ?? 'free';
         }
 
+        if ($request->filled('peso_kg') || $request->filled('pesoKg')) {
+            $usuario->peso_kg = (float) ($request->peso_kg ?? $request->pesoKg);
+        }
+        if ($request->filled('altura_metros') || $request->filled('alturaMetros')) {
+            $usuario->altura_metros = (float) ($request->altura_metros ?? $request->alturaMetros);
+        }
+        if ($request->filled('edad')) {
+            $usuario->edad = (int) $request->edad;
+        }
+        if ($request->filled('meta_calorica') || $request->filled('metaCalorica')) {
+            $usuario->meta_calorica = (int) ($request->meta_calorica ?? $request->metaCalorica);
+        }
+
         $usuario->save();
 
         return response()->json([

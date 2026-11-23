@@ -14,7 +14,14 @@ class ControladorWearable extends Controller
 
     public function store(Request $request)
     {
-        $wearable = Wearable::create($request->all());
+        $datos = $request->all();
+        if (!isset($datos['usuario_id']) && auth()->check()) {
+            $datos['usuario_id'] = (string) auth()->id();
+        }
+        if (!isset($datos['ultima_sincronizacion'])) {
+            $datos['ultima_sincronizacion'] = now();
+        }
+        $wearable = Wearable::create($datos);
         return response()->json($wearable, 201);
     }
 
@@ -38,7 +45,16 @@ class ControladorWearable extends Controller
 
     public function ultimaSincronizacion($usuarioId)
     {
-        $wearable = Wearable::where('usuario_cliente.id_usuario', (int)$usuarioId)->orderBy('ultima_sincronizacion', 'desc')->first();
+        $wearable = Wearable::where('usuario_id', (string) $usuarioId)
+            ->orWhere('usuario_cliente.id_usuario', (string) $usuarioId)
+            ->orWhere('usuario_cliente.id_usuario', (int) $usuarioId)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if (!$wearable) {
+            $wearable = Wearable::orderBy('created_at', 'desc')->first();
+        }
+
         return response()->json($wearable);
     }
 }

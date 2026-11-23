@@ -43,8 +43,8 @@ return [
             'url' => env('MAIL_URL'),
             'host' => env('MAIL_HOST', 'smtp.gmail.com'),
             'port' => env('MAIL_PORT', 587),
-            'username' => env('MAIL_USERNAME', 'nourish.app.services@gmail.com'),
-            'password' => env('MAIL_PASSWORD', 'n0ur1$4pp_IDGS_XD'),
+            'username' => env('MAIL_USERNAME', 'nourish.app.verify@gmail.com'),
+            'password' => env('MAIL_PASSWORD', 'euadxgcargrzfvnx'),
             'timeout' => null,
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
@@ -109,7 +109,7 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'nourish.app.services@gmail.com'),
+        'address' => env('MAIL_FROM_ADDRESS', 'nourish.app.verify@gmail.com'),
         'name' => env('MAIL_FROM_NAME', 'Nourish - Nutrición y Salud'),
     ],
 

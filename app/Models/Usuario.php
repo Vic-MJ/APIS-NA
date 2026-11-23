@@ -52,6 +52,11 @@ class Usuario extends Authenticatable
         'correo_verificado',
         'codigo_verificacion_correo',
         'codigo_verificacion_expira',
+        'peso_kg',
+        'altura_metros',
+        'edad',
+        'meta_calorica',
+        'ultima_actividad',
     ];
 
     protected $hidden = [
