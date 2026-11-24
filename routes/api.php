@@ -66,10 +66,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('pacientes', ControladorPaciente::class);
     });
 
-    // Recursos Principales (CRUDs)
     Route::apiResource('nutriologos', ControladorNutriologo::class);
     Route::post('/pacientes/vincular', [ControladorPaciente::class, 'vincularNutriologo']);
     Route::post('/pacientes/desvincular', [ControladorPaciente::class, 'desvincularNutriologo']);
+    Route::get('/pacientes/expediente/{usuarioId}', [ControladorPaciente::class, 'expedienteClinico']);
+    Route::post('/pacientes/expediente/{usuarioId}/plan', [ControladorPaciente::class, 'actualizarPlanClinico']);
+    Route::apiResource('consultas', ControladorConsulta::class);
     Route::apiResource('dietas', ControladorDieta::class);
     Route::apiResource('comidas', ControladorComida::class);
     Route::apiResource('actividades', ControladorActividad::class);

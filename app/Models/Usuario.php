@@ -57,6 +57,10 @@ class Usuario extends Authenticatable
         'edad',
         'meta_calorica',
         'ultima_actividad',
+        'historial_peso',
+        'medidas',
+        'alergias',
+        'dieta_asignada',
     ];
 
     protected $hidden = [

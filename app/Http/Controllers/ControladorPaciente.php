@@ -135,23 +135,75 @@ class ControladorPaciente extends Controller
         $idNutriologo = $usuario->nutriologo_id;
 
         if ($idNutriologo) {
-            // Buscamos al nutriólogo para quitar al paciente de su lista
             $perfilNutri = \App\Models\Nutriologo::where('usuario.id_usuario', $idNutriologo)
                 ->orWhere('usuario.id_usuario', (string)$idNutriologo)
                 ->first();
 
             if ($perfilNutri) {
-                // Removemos el ID del paciente del arreglo 'pacientes'
                 $perfilNutri->pull('pacientes', (string)$usuario->_id);
             }
         }
 
-        // Limpiamos el vínculo en el usuario
         $usuario->update(['nutriologo_id' => null]);
 
         return response()->json([
             'mensaje' => 'Desvinculación exitosa',
             'usuario' => $usuario->fresh()
+        ]);
+    }
+
+    public function expedienteClinico($usuarioId)
+    {
+        $pacienteUsuario = \App\Models\Usuario::where('_id', (string)$usuarioId)->first();
+        $comidas = \App\Models\Comida::orderBy('created_at', 'desc')->take(14)->get();
+        $actividades = \App\Models\Actividad::where('usuario_id', (string)$usuarioId)->orderBy('created_at', 'desc')->take(15)->get();
+        $wearable = \App\Models\Wearable::where('usuario_id', (string)$usuarioId)
+            ->orWhere('usuario_cliente.id_usuario', (string)$usuarioId)
+            ->orderBy('created_at', 'desc')
+            ->first();
+        $consultas = \App\Models\Consulta::where('usuario_cliente.id_usuario', (string)$usuarioId)->orderBy('created_at', 'desc')->get();
+
+        return response()->json([
+            'usuario' => $pacienteUsuario,
+            'comidas' => $comidas,
+            'actividades' => $actividades,
+            'wearable' => $wearable,
+            'consultas' => $consultas,
+        ]);
+    }
+
+    public function actualizarPlanClinico(Request $request, $usuarioId)
+    {
+        $pacienteUsuario = \App\Models\Usuario::where('_id', (string)$usuarioId)->first();
+        if (!$pacienteUsuario) {
+            return response()->json(['mensaje' => 'Paciente no encontrado'], 404);
+        }
+
+        if ($request->filled('meta_calorica')) {
+            $pacienteUsuario->meta_calorica = (int)$request->meta_calorica;
+        }
+        if ($request->has('dieta_asignada')) {
+            $pacienteUsuario->dieta_asignada = $request->dieta_asignada;
+        }
+        if ($request->filled('peso_kg')) {
+            $pacienteUsuario->peso_kg = (float)$request->peso_kg;
+        }
+        $pacienteUsuario->save();
+
+        try {
+            \App\Models\Notificacion::create([
+                'usuario_id' => (string)$usuarioId,
+                'tipo' => 'plan_actualizado',
+                'mensaje' => 'Tu nutriólogo actualizó tu plan nutricional y meta calórica (' . ($pacienteUsuario->meta_calorica ?? 2000) . ' kcal).',
+                'leido' => false,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error($e->getMessage());
+        }
+
+        return response()->json([
+            'mensaje' => 'Plan clínico actualizado correctamente',
+            'usuario' => $pacienteUsuario
         ]);
     }
 }

@@ -156,7 +156,9 @@ class ChatControlador extends Controller
         try {
             $request->validate([
                 'receptor_id' => 'required|string',
-                'contenido' => 'required|string',
+                'contenido' => 'nullable|string',
+                'adjunto_url' => 'nullable|string',
+                'adjunto_nombre' => 'nullable|string',
             ]);
 
             $receptor = $this->resolverUsuarioODestinatario((string) $request->receptor_id);
@@ -171,7 +173,9 @@ class ChatControlador extends Controller
             $mensaje = Mensaje::create([
                 'emisor_id' => (string) $usuario->_id,
                 'receptor_id' => $idReceptorReal,
-                'contenido' => $request->contenido,
+                'contenido' => (string) ($request->contenido ?? ''),
+                'adjunto_url' => $request->adjunto_url,
+                'adjunto_nombre' => $request->adjunto_nombre,
                 'leido' => false,
                 'fecha_envio' => now(),
             ]);

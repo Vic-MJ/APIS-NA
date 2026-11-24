@@ -15,6 +15,8 @@ class Mensaje extends Model
         'emisor_id',
         'receptor_id',
         'contenido',
+        'adjunto_url',
+        'adjunto_nombre',
         'leido',
         'fecha_envio',
     ];

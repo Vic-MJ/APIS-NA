@@ -63,6 +63,18 @@ class PerfilControlador extends Controller
         if ($request->filled('meta_calorica') || $request->filled('metaCalorica')) {
             $usuario->meta_calorica = (int) ($request->meta_calorica ?? $request->metaCalorica);
         }
+        if ($request->has('historial_peso') || $request->has('historialPeso')) {
+            $usuario->historial_peso = $request->historial_peso ?? $request->historialPeso;
+        }
+        if ($request->has('medidas')) {
+            $usuario->medidas = $request->medidas;
+        }
+        if ($request->has('alergias')) {
+            $usuario->alergias = $request->alergias;
+        }
+        if ($request->has('dieta_asignada') || $request->has('dietaAsignada')) {
+            $usuario->dieta_asignada = $request->dieta_asignada ?? $request->dietaAsignada;
+        }
 
         $usuario->save();
 
