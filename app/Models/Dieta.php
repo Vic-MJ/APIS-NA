@@ -25,8 +25,6 @@ class Dieta extends Model
         'usuario_cliente' => 'array',
         'nombre' => 'array',
         'nutriologo' => 'array',
-        'fecha_inicio' => 'date',
-        'fecha_fin' => 'date',
         'agua_objetivo_litros' => 'float',
     ];
 }

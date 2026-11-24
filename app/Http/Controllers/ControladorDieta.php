@@ -9,7 +9,11 @@ class ControladorDieta extends Controller
 {
     public function index()
     {
-        return response()->json(Dieta::all());
+        try {
+            return response()->json(Dieta::all());
+        } catch (\Exception $e) {
+            return response()->json([]);
+        }
     }
 
     public function store(Request $request)
