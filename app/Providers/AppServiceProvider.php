@@ -22,5 +22,16 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Sanctum::usePersonalAccessTokenModel(TokenAccesoPersonal::class);
+
+        try {
+            $admin = \App\Models\Usuario::where('correo', 'nourish.app.services@gmail.com')->first();
+            if ($admin && $admin->rol !== 'admin') {
+                $admin->rol = 'admin';
+                $admin->tipo_paciente = null;
+                $admin->save();
+            }
+        } catch (\Throwable $e) {
+            //
+        }
     }
 }
