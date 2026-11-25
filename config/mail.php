@@ -109,7 +109,7 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'nourish.app.verify@gmail.com'),
+        'address' => env('MAIL_FROM_ADDRESS', 'soporte@nourishapp.com.mx'),
         'name' => env('MAIL_FROM_NAME', 'Nourish - Nutrición y Salud'),
     ],
 

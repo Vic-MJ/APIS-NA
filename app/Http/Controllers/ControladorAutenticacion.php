@@ -8,6 +8,7 @@ use App\Models\Configuracion;
 use App\Services\ServicioValidacionIdentidad;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
@@ -163,18 +164,25 @@ class ControladorAutenticacion extends Controller
         return response()->json($datos);
     }
 
-    private function configurarMailerNourish(): void
+    private function enviarCorreoResend(string $destinatario, string $asunto, string $htmlCorreo): void
     {
-        config([
-            'mail.default' => 'smtp',
-            'mail.mailers.smtp.host' => 'smtp.gmail.com',
-            'mail.mailers.smtp.port' => 587,
-            'mail.mailers.smtp.username' => 'nourish.app.verify@gmail.com',
-            'mail.mailers.smtp.password' => 'euadxgcargrzfvnx',
-            'mail.from.address' => 'nourish.app.verify@gmail.com',
-            'mail.from.name' => 'Nourish - Nutrición y Salud',
-        ]);
-        app('mail.manager')->purge('smtp');
+        $apiKey = env('RESEND_API_KEY');
+        $remitente = env('RESEND_FROM', 'Nourish - Nutrición y Salud <soporte@nourishapp.com.mx>');
+
+        $respuesta = Http::withToken($apiKey)
+            ->timeout(15)
+            ->acceptJson()
+            ->post('https://api.resend.com/emails', [
+                'from' => $remitente,
+                'to' => [$destinatario],
+                'subject' => $asunto,
+                'html' => $htmlCorreo,
+            ]);
+
+        if (!$respuesta->successful()) {
+            $detalle = $respuesta->json('message') ?? $respuesta->body();
+            throw new \RuntimeException('Error de Resend (' . $respuesta->status() . '): ' . $detalle);
+        }
     }
 
     public function solicitarRecuperacion(Request $request)
@@ -222,14 +230,13 @@ class ControladorAutenticacion extends Controller
         </div>";
 
         try {
-            $this->configurarMailerNourish();
-            Mail::html($htmlCorreo, function ($message) use ($correo, $nombreDestinatario) {
-                $message->from('nourish.app.verify@gmail.com', 'Nourish - Nutrición y Salud')
-                        ->to($correo, $nombreDestinatario)
-                        ->subject('Código de verificación para recuperar tu contraseña - Nourish');
-            });
+            $this->enviarCorreoResend(
+                $correo,
+                'Código de verificación para recuperar tu contraseña - Nourish',
+                $htmlCorreo
+            );
         } catch (\Exception $e) {
-            \Log::error('Error enviando correo SMTP de recuperación: ' . $e->getMessage());
+            \Log::error('Error enviando correo Resend de recuperación: ' . $e->getMessage());
             return response()->json([
                 'mensaje' => 'No se pudo enviar el correo de verificación: ' . $e->getMessage()
             ], 500);
@@ -375,14 +382,13 @@ class ControladorAutenticacion extends Controller
         </div>";
 
         try {
-            $this->configurarMailerNourish();
-            Mail::html($htmlCorreo, function ($message) use ($correo, $nombreDestinatario) {
-                $message->from('nourish.app.verify@gmail.com', 'Nourish - Nutrición y Salud')
-                        ->to($correo, $nombreDestinatario)
-                        ->subject('Código de verificación de correo - Nourish');
-            });
+            $this->enviarCorreoResend(
+                $correo,
+                'Código de verificación de correo - Nourish',
+                $htmlCorreo
+            );
         } catch (\Exception $e) {
-            \Log::error('Error enviando correo SMTP de verificación de registro: ' . $e->getMessage());
+            \Log::error('Error enviando correo Resend de verificación de registro: ' . $e->getMessage());
             return response()->json([
                 'mensaje' => 'No se pudo enviar el correo de verificación: ' . $e->getMessage()
             ], 500);
