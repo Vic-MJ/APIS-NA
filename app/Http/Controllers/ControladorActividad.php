@@ -10,11 +10,21 @@ class ControladorActividad extends Controller
     /**
      * Obtener todas las actividades (ordenadas por fecha de creación)
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Se devuelven las más recientes primero
-        return response()->json(Actividad::orderBy('created_at', 'desc')->get());
+        $usuarioId = auth()->id()??$request->input('usuario_id')??$request->input('usuarioId');
+         if ($usuarioId) {
+            $actividades = Actividad::where('id_usuario', $usuarioId)
+                ->orWhere('usuario_id', $usuarioId)
+                ->orderBy('created_at', 'desc')
+                .get();
+            
+        return response()->json($actividades);
     }
+
+    // Fallback si no viene autenticado
+    return response()->json(Actividad::orderBy('created_at', 'desc')->get());
+}
 
     /**
      * Guardar una nueva actividad física aceptando múltiples formatos de payload desde Android
@@ -22,6 +32,7 @@ class ControladorActividad extends Controller
     public function store(Request $request)
     {
         // Soporte flexible para los nombres de campos que envía la App Android
+        $usuarioId = auth () -> id() ?? $request -> input('usuario_id')?? $request -> input ('usuarioId');
         $tipo = $request->input('tipo') ?? $request->input('nombre') ?? 'Cardio';
         $duracionMin = $request->input('duracion_min') ?? $request->input('duracion') ?? 30;
         $calorias = $request->input('calorias_quemadas') ?? $request->input('calorias') ?? 0;
@@ -34,9 +45,11 @@ class ControladorActividad extends Controller
             'duracion'          => is_numeric($duracionMin) ? "{$duracionMin} min" : (string)$duracionMin,
             'calorias_quemadas' => (float)$calorias,
             'calorias'          => (float)$calorias,
+            'fecha'             => $request->input('fecha') ?? now()->toDateString(),
             'intensidad'        => $intensidad,
             'hora'              => now()->toTimeString(),
-            'id_usuario'        => auth()->id() ?? $request->input('usuario_id')
+            'id_usuario'        => $usuarioId,
+            'usuario_id'        => $usuarioId
         ]);
 
         return response()->json($actividad, 201);
