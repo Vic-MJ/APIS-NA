@@ -16,7 +16,8 @@ class Actividad extends Model
         'duracion',
         'calorias',
         'fecha',
-        'hora'
+        'hora',
+        'id_usuario'
     ];
 
     protected $casts = [
