@@ -10,6 +10,7 @@ class Actividad extends Model
     protected $collection = 'actividades';
 
     protected $fillable = [
+        'usuario_id',
         'nombre',
         'tipo',
         'duracion',
